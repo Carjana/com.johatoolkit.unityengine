@@ -1,7 +1,7 @@
 {
   "name": "com.johatoolkit.unityengine",
   "version": "1.0.0",
-  "displayName": "JohaToolkit.Unity",
+  "displayName": "JohaToolkit.UnityEngine",
   "description": "This is the general Package which includes many little helpers",
   "author": {
     "name": "Joshua"
