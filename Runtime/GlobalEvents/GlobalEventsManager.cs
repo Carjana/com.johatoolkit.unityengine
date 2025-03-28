@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JohaToolkit.unity.GlobalEvents
+namespace JohaToolkit.UnityEngine.GlobalEvents
 {
     public static class GlobalEventsManager
     {

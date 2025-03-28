@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace JohaToolkit.Unity.DataStructures
+namespace JohaToolkit.UnityEngine.DataStructures
 {
     public class BinaryTree<T> where T : IComparable<T>
     {

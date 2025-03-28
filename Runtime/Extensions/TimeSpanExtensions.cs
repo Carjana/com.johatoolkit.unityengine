@@ -1,6 +1,6 @@
 using System;
 
-namespace JohaToolkit.unity.Extensions
+namespace JohaToolkit.UnityEngine.Extensions
 {
     public static class TimeSpanExtensions
     {

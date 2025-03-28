@@ -1,4 +1,4 @@
-﻿namespace JohaToolkit.Unity.Extensions
+﻿namespace JohaToolkit.UnityEngine.Extensions
 {
     public static class MathExtensions
     {

@@ -1,4 +1,4 @@
-﻿namespace JohaToolkit.Unity.DataStructures.Graph
+﻿namespace JohaToolkit.UnityEngine.DataStructures.Graph
 {
     public class Edge
     {

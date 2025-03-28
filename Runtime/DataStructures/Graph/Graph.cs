@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JohaToolkit.Unity.DataStructures.Graph
+namespace JohaToolkit.UnityEngine.DataStructures.Graph
 {
     public class Graph
     {

@@ -1,4 +1,4 @@
-namespace JohaToolkit.Unity.DataStructures.Lists.CircularLinkedList
+namespace JohaToolkit.UnityEngine.DataStructures.Lists.CircularLinkedList
 {
     public class CircularLinkedList<T>
     {

@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace JohaToolkit.Unity.DataStructures.Lists
+namespace JohaToolkit.UnityEngine.DataStructures.Lists
 {
     public class SimpleDoubleList<T> : IEnumerable
     {
