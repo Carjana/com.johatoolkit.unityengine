@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Sirenix.Serialization;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace JohaToolkit.unity.GlobalEvents
 {
