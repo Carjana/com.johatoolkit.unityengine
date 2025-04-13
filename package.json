@@ -2,7 +2,11 @@
   "name": "com.johatoolkit.unityengine",
   "version": "1.0.0",
   "displayName": "JohaToolkit.UnityEngine",
-  "description": "This is the general Package which includes many little helpers.\nOther Packages in UnityToolkit.UnityEngine:\n- Multiplayer https://github.com/Carjana/com.johatoolkit.unityengine.multiplayer.git \n- CheatConsole https://github.com/Carjana/com.johatoolkit.unityengine.cheatconsole.git",
+  "description": "This is the general Package which includes many little helpers.
+  \nOther Packages in UnityToolkit.UnityEngine:\n- Multiplayer https://github.com/Carjana/com.johatoolkit.unityengine.multiplayer.git 
+  \n- CheatConsole https://github.com/Carjana/com.johatoolkit.unityengine.cheatconsole.git
+  \n UI https://github.com/Carjana/com.johatoolkit.unityengine.ui.git
+  ",
   "author": {
     "name": "Joshua"
   },
