@@ -36,7 +36,6 @@ namespace JohaToolkit.UnityEngine.DataStructures.StateMachine
             if (!_transitions.ContainsKey(from))
             {
                 _transitions.Add(from, new List<(IState, Func<bool>)>());
-                return;
             }
             
             _transitions[from].Add((to, condition));
