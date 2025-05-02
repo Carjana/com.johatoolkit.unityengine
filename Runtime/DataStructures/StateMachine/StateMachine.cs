@@ -49,7 +49,8 @@ namespace JohaToolkit.UnityEngine.DataStructures.StateMachine
         public void UpdateMachine()
         {
             List<(IState, Func<bool>)> transitions = new();
-            transitions.AddRange(_transitions[CurrentState]);
+            if(_transitions.ContainsKey(CurrentState))
+                transitions.AddRange(_transitions[CurrentState]);
             transitions.AddRange(_anyTransitions);
             
             foreach ((IState, Func<bool>) transition in transitions)
