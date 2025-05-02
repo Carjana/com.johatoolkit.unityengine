@@ -65,6 +65,8 @@ namespace JohaToolkit.UnityEngine.DataStructures.StateMachine
 
         public void Transition(IState to)
         {
+            if (CurrentState == to)
+                return;
             CurrentState = to;
         }
     }
