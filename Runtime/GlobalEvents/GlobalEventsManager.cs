@@ -4,10 +4,11 @@ using UnityEngine;
 
 namespace JohaToolkit.UnityEngine.GlobalEvents
 {
+    [Obsolete("Use ScriptableObject Events instead")]
     public static class GlobalEventsManager
     {
         private static readonly Dictionary<Type, List<Action>> Subscribers = new();
-
+        
         public static void Subscribe<T>(Action action) where T : GlobalEventBase
         {
             Type type = typeof(T);
