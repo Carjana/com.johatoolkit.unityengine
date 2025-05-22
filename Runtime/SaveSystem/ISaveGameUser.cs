@@ -1,5 +1,3 @@
-using System.Runtime.Serialization;
-
 namespace JohaToolkit.UnityEngine.SaveSystem
 {
     public interface ISaveGameUser
