@@ -21,8 +21,8 @@ namespace JohaToolkit.UnityEngine.Tasks
         public event Action<TaskBase> TaskCancelled;
         
         
-        private CancellationTokenSource _cts;
-        public bool ValidateTasks(BaseTaskAgent agent)
+        protected CancellationTokenSource _cts;
+        public virtual bool ValidateTasks(BaseTaskAgent agent)
         {
             foreach (TaskBase taskBase in tasks)
             {
@@ -35,7 +35,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             return true;
         }
         
-        public async Awaitable ExecuteTasks(int startIndex)
+        public virtual async Awaitable ExecuteTasks(int startIndex)
         {
             if (startIndex < 0 || startIndex >= tasks.Length || IsExecutingTasks)
                 return;
@@ -80,7 +80,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             IsExecutingTasks = false;
         }
 
-        public void CancelTask()
+        public virtual void CancelTask()
         {
             if (!IsExecutingTasks)
                 return;
@@ -88,7 +88,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             _cts?.Cancel();
         }
 
-        public void ContinueTasks()
+        public virtual void ContinueTasks()
         {
             if (IsExecutingTasks) 
                 return;
