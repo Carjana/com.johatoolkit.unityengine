@@ -9,22 +9,26 @@ namespace JohaToolkit.UnityEngine.Tasks
     public class TaskHandler
     {
         [SerializeField] protected JoHaLogger logger; 
-        [SerializeReference] protected TaskBase[] tasks;
+        [SerializeReference] protected TaskBase[] taskSchedule;
         [SerializeField] protected bool loop;
-        public TaskBase[] Tasks => tasks;
+        public TaskBase[] TaskSchedule => taskSchedule;
         public bool IsLooping => loop;
-        public int CurrentTaskIndex { get; private set; } = 0;
+        
+        protected Awaitable<bool> CurrentTask;
+        public int CurrentTaskIndex { get; private set; }
         public bool IsExecutingTasks { get; private set; }
         
         public event Action<TaskBase, bool> TaskStarted;
         public event Action<TaskBase, bool> TaskCompleted;
         public event Action<TaskBase> TaskCancelled;
         
+        protected AwaitableCompletionSource CurrentTaskCompleted;
         
-        protected CancellationTokenSource _cts;
+        protected CancellationTokenSource Cts;
+        
         public virtual bool ValidateTasks(BaseTaskAgent agent)
         {
-            foreach (TaskBase taskBase in tasks)
+            foreach (TaskBase taskBase in taskSchedule)
             {
                 if (taskBase.Init(agent)) 
                     continue;
@@ -35,57 +39,68 @@ namespace JohaToolkit.UnityEngine.Tasks
             return true;
         }
         
-        public virtual async Awaitable ExecuteTasks(int startIndex)
+        public virtual async Awaitable ExecuteTasksAsync(int startIndex)
         {
-            if (startIndex < 0 || startIndex >= tasks.Length || IsExecutingTasks)
+            if (startIndex < 0 || startIndex >= taskSchedule.Length || IsExecutingTasks)
                 return;
 
-            IsExecutingTasks = true;
             CurrentTaskIndex = startIndex-1;
-            while ((loop || CurrentTaskIndex < tasks.Length - 1) && IsExecutingTasks)
+            while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && IsExecutingTasks)
             {
                 CurrentTaskIndex++;
-                if (CurrentTaskIndex >= tasks.Length)
+                if (CurrentTaskIndex >= taskSchedule.Length)
                     CurrentTaskIndex = 0;
-
-                TaskBase currentTaskBase = tasks[CurrentTaskIndex];
-                bool taskStarted = await currentTaskBase.StartTask();
-                TaskStarted?.Invoke(currentTaskBase, taskStarted);
-                if (!taskStarted)
-                {
-                    logger.LogWarning($"Task {currentTaskBase} failed to start. Skipping to next task.");
-                    continue;
-                }
-
-                _cts?.Dispose();
-                _cts = new CancellationTokenSource();
-                try
-                {
-                    bool taskCompleted = await currentTaskBase.IsComplete(_cts.Token);
-                    TaskCompleted?.Invoke(currentTaskBase, taskCompleted);
-                    if (!taskCompleted)
-                    {
-                        logger.LogWarning($"Task {currentTaskBase} is not complete. Skipping to next task.");
-                        continue;
-                    }
-                }
-                catch (OperationCanceledException e)
-                {
-                    TaskCancelled?.Invoke(currentTaskBase);
-                    logger.LogWarning($"Task {currentTaskBase} was cancelled: {e.Message}. Continuing to next task.");
-                    continue;
-                }
+                
+                await ExecuteTaskAsync(taskSchedule[CurrentTaskIndex]);
             }
 
+            logger.LogInfo("Execution of tasks completed");
             IsExecutingTasks = false;
         }
 
-        public virtual void CancelTask()
+        private async Awaitable ExecuteTaskAsync(TaskBase task)
+        {
+            IsExecutingTasks = true;
+            bool taskStarted = await task.StartTask();
+            TaskStarted?.Invoke(task, taskStarted);
+            if (!taskStarted)
+            {
+                logger.LogWarning($"Task {task} failed to start. Skipping to next task.");
+                return;
+            }
+
+            Cts?.Dispose();
+            Cts = new CancellationTokenSource();
+            CurrentTaskCompleted = new AwaitableCompletionSource();
+            try
+            {
+                bool taskCompleted = await task.IsComplete(Cts.Token);
+                TaskCompleted?.Invoke(task, taskCompleted);
+                if (!taskCompleted)
+                {
+                    logger.LogWarning($"Task {task} is not complete. Skipping to next task.");
+                }
+            }
+            catch (OperationCanceledException e)
+            {
+                    
+                TaskCancelled?.Invoke(task);
+                logger.LogWarning($"Task {task} was cancelled: {e.Message}. Continuing to next task.");
+            }
+            finally
+            {
+                CurrentTaskCompleted.SetResult();
+            }
+        }
+
+        public virtual async Awaitable CancelTaskAsync()
         {
             if (!IsExecutingTasks)
                 return;
             IsExecutingTasks = false;
-            _cts?.Cancel();
+            logger.LogInfo("cancelling Task..");
+            Cts?.Cancel();
+            await CurrentTaskCompleted.Awaitable;
         }
 
         public virtual void ContinueTasks()
@@ -93,7 +108,14 @@ namespace JohaToolkit.UnityEngine.Tasks
             if (IsExecutingTasks) 
                 return;
             logger.LogInfo($"Continuing Task {CurrentTaskIndex}");
-            _ = ExecuteTasks(CurrentTaskIndex);
+            _ = ExecuteTasksAsync(CurrentTaskIndex);
+        }
+
+        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task)
+        {
+            await CancelTaskAsync();
+            await ExecuteTaskAsync(task);
+            ContinueTasks();
         }
     }
 }
