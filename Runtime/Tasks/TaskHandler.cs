@@ -10,11 +10,9 @@ namespace JohaToolkit.UnityEngine.Tasks
     {
         [SerializeField] protected JoHaLogger logger; 
         [SerializeReference] protected TaskBase[] taskSchedule;
-        [SerializeField] protected bool loop;
         public TaskBase[] TaskSchedule => taskSchedule;
+        [SerializeField] protected bool loop;
         public bool IsLooping => loop;
-        
-        protected Awaitable<bool> CurrentTask;
         public int CurrentTaskIndex { get; private set; }
         public bool IsExecutingTasks { get; private set; }
         public bool IsOverridingSchedule { get; private set; }
@@ -53,44 +51,47 @@ namespace JohaToolkit.UnityEngine.Tasks
                     CurrentTaskIndex = 0;
 
                 await ExecuteTaskAsync(taskSchedule[CurrentTaskIndex]);
-            } while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && IsExecutingTasks);
+            } while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && !IsOverridingSchedule);
 
-            logger.LogInfo("Execution of tasks completed");
-            IsExecutingTasks = false;
+            logger.LogInfo("Task Schedule completed/cancelled");
         }
 
         private async Awaitable ExecuteTaskAsync(TaskBase task)
         {
-            IsExecutingTasks = true;
-            bool taskStarted = await task.StartTask();
-            TaskStarted?.Invoke(task, taskStarted);
-            if (!taskStarted)
-            {
-                logger.LogWarning($"Task {task} failed to start. Skipping to next task.");
-                return;
-            }
-
             Cts?.Dispose();
             Cts = new CancellationTokenSource();
             CurrentTaskCompleted = new AwaitableCompletionSource();
+            
+            bool taskStarted = await task.StartTask();
+            TaskStarted?.Invoke(task, taskStarted);
+            IsExecutingTasks = taskStarted;
+            
+            if (!taskStarted)
+            {
+                logger.LogWarning($"Task {task} failed to start");
+                CurrentTaskCompleted?.SetResult();
+                return;
+            }
+
             try
             {
                 bool taskCompleted = await task.IsComplete(Cts.Token);
                 TaskCompleted?.Invoke(task, taskCompleted);
                 if (!taskCompleted)
                 {
-                    logger.LogWarning($"Task {task} is not complete. Skipping to next task.");
+                    logger.LogWarning($"Task {task} is not complete");
                 }
             }
             catch (OperationCanceledException e)
             {
                     
                 TaskCancelled?.Invoke(task);
-                logger.LogWarning($"Task {task} was cancelled: {e.Message}. Continuing to next task.");
+                logger.LogWarning($"Task {task} was cancelled");
             }
             finally
             {
                 CurrentTaskCompleted.SetResult();
+                IsExecutingTasks = false;
             }
         }
 
@@ -98,28 +99,29 @@ namespace JohaToolkit.UnityEngine.Tasks
         {
             if (!IsExecutingTasks)
                 return;
-            IsExecutingTasks = false;
-            logger.LogInfo("cancelling Task..");
+            logger.LogInfo("Cancelling current task...");
             Cts?.Cancel();
             await CurrentTaskCompleted.Awaitable;
+            logger.LogInfo("Current task cancelled");
         }
 
         public virtual void ContinueTaskSchedule()
         {
-            if (IsExecutingTasks) 
+            if (IsExecutingTasks)
                 return;
-            logger.LogInfo($"Continuing Task {CurrentTaskIndex}");
+            logger.LogInfo($"Continuing task schedule (TaskIndex: {CurrentTaskIndex})...");
             _ = ExecuteTaskScheduleAsync(CurrentTaskIndex);
         }
 
         public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task)
         {
+            logger.LogInfo($"Overriding CurrentTask with Task {task}...");
             IsOverridingSchedule = true;
-            await CancelTaskAsync();
+            if (IsExecutingTasks)
+                await CancelTaskAsync();
             await ExecuteTaskAsync(task);
-            IsExecutingTasks = false;
             IsOverridingSchedule = false;
-            ContinueTaskSchedule();
+            logger.LogInfo("Task schedule Override completed");
         }
     }
 }

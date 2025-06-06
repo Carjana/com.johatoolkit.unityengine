@@ -8,11 +8,10 @@ namespace JohaToolkit.UnityEngine.Tasks
     [Serializable]
     public abstract class TaskBase
     {
+        [SerializeField] public string taskName;
         public abstract bool Init(BaseTaskAgent agent);
-        public virtual async Awaitable<bool> StartTask()
-        {
-            return await Task.FromResult(true);
-        }
+        public abstract Awaitable<bool> StartTask();
         public abstract Awaitable<bool> IsComplete(CancellationToken cancellationToken);
+        public override string ToString() => taskName;
     }
 }
