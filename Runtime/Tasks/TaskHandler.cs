@@ -114,8 +114,6 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task)
         {
-            if (IsOverridingSchedule)
-                await CancelTaskAsync(); // Cancel the override, then cancel continue task Schedule
             IsOverridingSchedule = true;
             await CancelTaskAsync();
             await ExecuteTaskAsync(task);
