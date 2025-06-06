@@ -17,6 +17,7 @@ namespace JohaToolkit.UnityEngine.Tasks
         protected Awaitable<bool> CurrentTask;
         public int CurrentTaskIndex { get; private set; }
         public bool IsExecutingTasks { get; private set; }
+        public bool IsOverridingSchedule { get; private set; }
         
         public event Action<TaskBase, bool> TaskStarted;
         public event Action<TaskBase, bool> TaskCompleted;
@@ -113,9 +114,13 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task)
         {
+            if (IsOverridingSchedule)
+                await CancelTaskAsync(); // Cancel the override, then cancel continue task Schedule
+            IsOverridingSchedule = true;
             await CancelTaskAsync();
             await ExecuteTaskAsync(task);
             IsExecutingTasks = false;
+            IsOverridingSchedule = false;
             ContinueTaskSchedule();
         }
     }
