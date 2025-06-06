@@ -8,18 +8,20 @@ namespace JohaToolkit.UnityEngine.Tasks
     [Serializable]
     public class TaskHandler
     {
-        [SerializeField] private JoHaLogger logger; 
-        [SerializeReference] public TaskBase[] tasks;
-        [SerializeField] private bool loop;
-
+        [SerializeField] protected JoHaLogger logger; 
+        [SerializeReference] protected TaskBase[] tasks;
+        [SerializeField] protected bool loop;
+        public TaskBase[] Tasks => tasks;
+        public bool IsLooping => loop;
+        public int CurrentTaskIndex { get; private set; } = 0;
+        public bool IsExecutingTasks { get; private set; }
+        
         public event Action<TaskBase, bool> TaskStarted;
         public event Action<TaskBase, bool> TaskCompleted;
         public event Action<TaskBase> TaskCancelled;
         
-        private int _currentTaskIndex = 0;
-        private bool _isExecutingTasks;
+        
         private CancellationTokenSource _cts;
-
         public bool ValidateTasks(BaseTaskAgent agent)
         {
             foreach (TaskBase taskBase in tasks)
@@ -35,18 +37,18 @@ namespace JohaToolkit.UnityEngine.Tasks
         
         public async Awaitable ExecuteTasks(int startIndex)
         {
-            if (startIndex < 0 || startIndex >= tasks.Length)
+            if (startIndex < 0 || startIndex >= tasks.Length || IsExecutingTasks)
                 return;
 
-            _isExecutingTasks = true;
-            _currentTaskIndex = startIndex-1;
-            while ((loop || _currentTaskIndex < tasks.Length - 1) && _isExecutingTasks)
+            IsExecutingTasks = true;
+            CurrentTaskIndex = startIndex-1;
+            while ((loop || CurrentTaskIndex < tasks.Length - 1) && IsExecutingTasks)
             {
-                _currentTaskIndex++;
-                if (_currentTaskIndex >= tasks.Length)
-                    _currentTaskIndex = 0;
+                CurrentTaskIndex++;
+                if (CurrentTaskIndex >= tasks.Length)
+                    CurrentTaskIndex = 0;
 
-                TaskBase currentTaskBase = tasks[_currentTaskIndex];
+                TaskBase currentTaskBase = tasks[CurrentTaskIndex];
                 bool taskStarted = await currentTaskBase.StartTask();
                 TaskStarted?.Invoke(currentTaskBase, taskStarted);
                 if (!taskStarted)
@@ -74,22 +76,24 @@ namespace JohaToolkit.UnityEngine.Tasks
                     continue;
                 }
             }
+
+            IsExecutingTasks = false;
         }
 
         public void CancelTask()
         {
-            if (!_isExecutingTasks)
+            if (!IsExecutingTasks)
                 return;
-            _isExecutingTasks = false;
+            IsExecutingTasks = false;
             _cts?.Cancel();
         }
 
         public void ContinueTasks()
         {
-            if (_isExecutingTasks) 
+            if (IsExecutingTasks) 
                 return;
-            logger.LogInfo($"Continuing Task {_currentTaskIndex}");
-            _ = ExecuteTasks(_currentTaskIndex);
+            logger.LogInfo($"Continuing Task {CurrentTaskIndex}");
+            _ = ExecuteTasks(CurrentTaskIndex);
         }
     }
 }

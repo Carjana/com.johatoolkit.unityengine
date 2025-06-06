@@ -6,7 +6,7 @@ namespace JohaToolkit.UnityEngine.Tasks
     {
         [SerializeField] protected TaskHandler taskHandler;
 
-        private void Awake()
+        protected void Awake()
         {
             taskHandler.ValidateTasks(this);
         }
