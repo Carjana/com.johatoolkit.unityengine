@@ -115,6 +115,7 @@ namespace JohaToolkit.UnityEngine.Tasks
         {
             await CancelTaskAsync();
             await ExecuteTaskAsync(task);
+            IsExecutingTasks = false;
             ContinueTaskSchedule();
         }
     }
