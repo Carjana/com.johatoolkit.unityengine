@@ -39,20 +39,20 @@ namespace JohaToolkit.UnityEngine.Tasks
             return true;
         }
         
-        public virtual async Awaitable ExecuteTasksAsync(int startIndex)
+        public virtual async Awaitable ExecuteTaskScheduleAsync(int startIndex)
         {
             if (startIndex < 0 || startIndex >= taskSchedule.Length || IsExecutingTasks)
                 return;
-
+            
             CurrentTaskIndex = startIndex-1;
-            while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && IsExecutingTasks)
+            do
             {
                 CurrentTaskIndex++;
                 if (CurrentTaskIndex >= taskSchedule.Length)
                     CurrentTaskIndex = 0;
-                
+
                 await ExecuteTaskAsync(taskSchedule[CurrentTaskIndex]);
-            }
+            } while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && IsExecutingTasks);
 
             logger.LogInfo("Execution of tasks completed");
             IsExecutingTasks = false;
@@ -103,19 +103,19 @@ namespace JohaToolkit.UnityEngine.Tasks
             await CurrentTaskCompleted.Awaitable;
         }
 
-        public virtual void ContinueTasks()
+        public virtual void ContinueTaskSchedule()
         {
             if (IsExecutingTasks) 
                 return;
             logger.LogInfo($"Continuing Task {CurrentTaskIndex}");
-            _ = ExecuteTasksAsync(CurrentTaskIndex);
+            _ = ExecuteTaskScheduleAsync(CurrentTaskIndex);
         }
 
         public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task)
         {
             await CancelTaskAsync();
             await ExecuteTaskAsync(task);
-            ContinueTasks();
+            ContinueTaskSchedule();
         }
     }
 }
