@@ -51,6 +51,8 @@ namespace JohaToolkit.UnityEngine.Tasks
                     CurrentTaskIndex = 0;
 
                 await ExecuteTaskAsync(taskSchedule[CurrentTaskIndex]);
+                if (Cts.IsCancellationRequested)
+                    break;
             } while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && !IsOverridingSchedule);
 
             logger.LogInfo("Task Schedule completed/cancelled");
