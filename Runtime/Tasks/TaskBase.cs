@@ -13,5 +13,11 @@ namespace JohaToolkit.UnityEngine.Tasks
         public abstract Awaitable<bool> StartTask();
         public abstract Awaitable<bool> IsComplete(CancellationToken cancellationToken);
         public override string ToString() => taskName;
+        
+        protected bool ValidateInterface<TInterface>(BaseTaskAgent agent, out TInterface agentInterface) where TInterface : class
+        {
+            agentInterface = agent as TInterface;
+            return agentInterface != null;
+        }
     }
 }
