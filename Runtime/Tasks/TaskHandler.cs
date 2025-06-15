@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using JohaToolkit.UnityEngine.ScriptableObjects.Logging;
 using UnityEngine;
@@ -84,9 +85,8 @@ namespace JohaToolkit.UnityEngine.Tasks
                     logger.LogWarning($"Task {task} is not complete");
                 }
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
-                    
                 TaskCancelled?.Invoke(task);
                 logger.LogWarning($"Task {task} was cancelled");
             }
@@ -115,13 +115,22 @@ namespace JohaToolkit.UnityEngine.Tasks
             _ = ExecuteTaskScheduleAsync(CurrentTaskIndex);
         }
 
-        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task, bool continueScheduleOnCompletion = false)
+        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task, bool continueScheduleOnCompletion = false) => await OverrideTaskScheduleAsync(new[]{task}, continueScheduleOnCompletion);
+
+        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase[] tasks, bool continueScheduleOnCompletion = false)
         {
-            logger.LogInfo($"Overriding CurrentTask with Task {task}...");
+            logger.LogInfo($"Overriding CurrentTask with {tasks.Length} Tasks...");
             IsOverridingSchedule = true;
             if (IsExecutingTasks)
                 await CancelTaskAsync();
-            await ExecuteTaskAsync(task);
+            foreach (TaskBase task in tasks)
+            {
+                await ExecuteTaskAsync(task);
+                if (!Cts.IsCancellationRequested)
+                    continue;
+                logger.LogInfo("Task schedule Override cancelled");
+                break;
+            }
             IsOverridingSchedule = false;
             logger.LogInfo("Task schedule Override completed");
             if(!Cts.IsCancellationRequested && continueScheduleOnCompletion)
