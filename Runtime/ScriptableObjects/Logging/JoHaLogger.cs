@@ -1,5 +1,9 @@
 using System;
+using System.IO;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Windows;
+using File = System.IO.File;
 
 namespace JohaToolkit.UnityEngine.ScriptableObjects.Logging
 {
@@ -18,6 +22,7 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Logging
         [SerializeField] private bool logWarning = true;
         [SerializeField] private bool logError = true;
 
+        [Obsolete("Use LogInfo, LogWarning, or LogError instead.")]
         public void Log(string message, LogLevel level)
         {
             switch (level)
@@ -36,26 +41,28 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Logging
             }
         }
 
-        public void LogInfo(string message)
+        public void LogInfo(string message, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0, [CallerMemberName] string memberName = "")
         {
             if (!logInfo)
                 return;
-            Debug.Log($"[{prefix}] {message}]");
+            Debug.Log($"[{prefix}] {message}\n{GetCallerInfo(filePath, lineNumber, memberName)}");
         }
-        
-        public  void LogWarning(string message)
+
+        public void LogWarning(string message, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0, [CallerMemberName] string memberName = "")
         {
-            if(!logWarning)
+            if (!logWarning)
                 return;
-            Debug.LogWarning($"[{prefix}] {message}]");
+            Debug.LogWarning($"[{prefix}] {message}\n{GetCallerInfo(filePath, lineNumber, memberName)}");
         }
-        
-        public void LogError(string message)
+
+        public void LogError(string message, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0, [CallerMemberName] string memberName = "")
         {
             if (!logError)
                 return;
-            Debug.LogError($"[{prefix}] {message}]");
+            Debug.LogError($"[{prefix}] {message}\n{GetCallerInfo(filePath, lineNumber, memberName)}");
         }
+
+        private string GetCallerInfo(string filePath, int lineNumber, string memberName) => $"[{Path.GetFileName(filePath)}:{lineNumber} {memberName}]";
     }
 }
 
