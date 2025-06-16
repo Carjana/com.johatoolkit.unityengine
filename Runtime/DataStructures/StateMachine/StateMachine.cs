@@ -16,19 +16,19 @@ namespace JohaToolkit.UnityEngine.DataStructures.StateMachine
             private set
             {
                 IState oldState = _currentState;
-                _currentState.ExitState();
+                _currentState.ExitState(value);
                 _currentState = value;
-                _currentState.EnterState();
+                _currentState.EnterState(oldState);
                 StateChanged?.Invoke(oldState, _currentState);
             }
         }
 
         public Action<IState, IState> StateChanged;
 
-        public StateMachine(IState initialState)
+        public void StartStateMachine(IState initialState)
         {
             _currentState = initialState;
-            _currentState.EnterState();
+            _currentState.EnterState(null);
         }
         
         public void AddTransition(IState from, IState to, Func<bool> condition)
