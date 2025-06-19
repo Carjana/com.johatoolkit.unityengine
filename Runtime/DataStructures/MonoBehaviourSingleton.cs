@@ -1,39 +1,48 @@
-using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace JohaToolkit.UnityEngine.DataStructures
 {
-    public abstract class MonoBehaviourSingleton<T> : MonoBehaviour where T : MonoBehaviour
+    public class MonoBehaviourSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         public static T Instance;
-        protected abstract bool IsPersistent { get; }
-        protected virtual void Awake()
+        protected  bool IsPersistent { get; set; }
+
+        protected void Awake()
         {
             if (Instance != null)
             {
                 Debug.LogWarning($"Singleton {nameof(T)} already exists, destroying GameObject {gameObject.name}.");
                 Destroy(gameObject);
+                return;
             }
             else
             {
                 Instance = this as T;
             }
+            if (IsPersistent)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
 
-        private void OnEnable()
+        protected void OnEnable()
         {
+            if(IsPersistent)
+                return;
             SceneManager.sceneUnloaded += OnSceneUnload;
         }
         
-        private void OnDisable()
+        protected void OnDisable()
         {
+            if(IsPersistent)
+                return;
             SceneManager.sceneUnloaded -= OnSceneUnload;
         }
         
         private void OnSceneUnload(Scene unloadedScene)
         {
-            if (gameObject.scene != unloadedScene || IsPersistent)
+            if (gameObject.scene != unloadedScene)
                 return;
             
             Debug.Log($"Singleton {nameof(T)} is being destroyed because the scene {unloadedScene.name} was unloaded and {nameof(IsPersistent)} is false.");
