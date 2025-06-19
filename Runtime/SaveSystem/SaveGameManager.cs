@@ -61,7 +61,7 @@ namespace JohaToolkit.UnityEngine.SaveSystem
             {
                 SaveGame saveGame = new()
                 {
-                    SaveName = saveName,
+                    SaveName = Path.GetFileNameWithoutExtension(saveName),
                     SaveFilePath = saveFilePath
                 };
                 if (CurrentSaveGame != null)
@@ -73,7 +73,6 @@ namespace JohaToolkit.UnityEngine.SaveSystem
                 {
                     user.Save(saveGame);
                 }
-                Debug.Log(saveGame.SaveName);
 
                 bool saveGameSucceeded = Format switch
                 {
