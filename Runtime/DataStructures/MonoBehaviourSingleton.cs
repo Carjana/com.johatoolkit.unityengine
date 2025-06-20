@@ -6,9 +6,9 @@ namespace JohaToolkit.UnityEngine.DataStructures
     public class MonoBehaviourSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         public static T Instance;
-        protected  bool IsPersistent { get; set; }
+        protected bool IsPersistent { get; set; }
 
-        protected void Awake()
+        protected virtual void Awake()
         {
             if (Instance != null)
             {
@@ -26,14 +26,14 @@ namespace JohaToolkit.UnityEngine.DataStructures
             }
         }
 
-        protected void OnEnable()
+        protected virtual void OnEnable()
         {
             if(IsPersistent)
                 return;
             SceneManager.sceneUnloaded += OnSceneUnload;
         }
         
-        protected void OnDisable()
+        protected virtual void OnDisable()
         {
             if(IsPersistent)
                 return;
