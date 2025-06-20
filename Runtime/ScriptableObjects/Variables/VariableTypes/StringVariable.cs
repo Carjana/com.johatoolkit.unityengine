@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
@@ -11,11 +10,5 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
             startValue = string.Empty;
             currentValue = string.Empty;
         }
-    }
-
-    [CustomPropertyDrawer(typeof(StringVariable))]
-    public class StringVariableDrawer : VariableBaseDrawer<string>
-    {
-        
     }
 }

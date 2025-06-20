@@ -1,8 +1,9 @@
+using JohaToolkit.UnityEngine.ScriptableObjects.Variables;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
+namespace Editor
 {
     public class VariableBaseDrawer<T> : PropertyDrawer
     {

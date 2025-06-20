@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
@@ -8,8 +7,4 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
     {
     }
 
-    [CustomPropertyDrawer(typeof(IntVariable))]
-    public class IntVariableDrawer : VariableBaseDrawer<int>
-    {
-    }
 }

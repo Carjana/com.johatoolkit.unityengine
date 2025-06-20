@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
@@ -12,11 +11,6 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
     
     [CreateAssetMenu(fileName = "ExampleEnumVariable", menuName = "JoHaToolkit/Variables/ExampleEnumVariable")]
     public class ExampleEnumVariable : SOVariableBase<MyEnum>
-    {
-    }
-
-    [CustomPropertyDrawer(typeof(ExampleEnumVariable))]
-    public class ExampleEnumVariableDrawer : VariableBaseDrawer<MyEnum>
     {
     }
 }
