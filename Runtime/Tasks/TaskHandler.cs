@@ -37,9 +37,10 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         public virtual async Awaitable CancelScheduleAsync()
         {
-            logger?.LogInfo($"Canceling Task Schedule {_currentSchedule.ScheduleName}...");
-            await _currentSchedule.CancelSchedule();
-            logger?.LogInfo($"Canceling Complete! ({_currentSchedule.ScheduleName})");
+            logger?.LogInfo($"Canceling Task Schedule {_currentSchedule?.ScheduleName}...");
+            if(_currentSchedule != null)
+                await _currentSchedule.CancelSchedule();
+            logger?.LogInfo($"Canceling Complete! ({_currentSchedule?.ScheduleName})");
             _currentSchedule = null;
         }
 
@@ -52,7 +53,7 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         public virtual async Awaitable OverrideTaskScheduleAsync(TaskSchedule newSchedule, bool continueBaseScheduleOnCompletion = false)
         {
-            logger?.LogInfo($"Overriding {_currentSchedule.ScheduleName} TaskSchedule with {newSchedule.ScheduleName}...");
+            logger?.LogInfo($"Overriding {_currentSchedule?.ScheduleName} TaskSchedule with {newSchedule.ScheduleName}...");
             IsOverridingBaseSchedule = true;
             _activeOverrideCount++;
             await CancelScheduleAsync();
