@@ -36,7 +36,7 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         public virtual void ContinueBaseTaskSchedule()
         {
-            baseSchedule.ContinueTaskSchedule();
+            _ = ExecuteScheduleAsync(baseSchedule, baseSchedule.CurrentTaskIndex);
         }
         
 

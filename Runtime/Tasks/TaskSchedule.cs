@@ -81,11 +81,6 @@ namespace JohaToolkit.UnityEngine.Tasks
             
             logger.LogError($"Task {task.taskName} failed/Canceled");
         }
-
-        public void ContinueTaskSchedule()
-        {
-            _ = ExecuteSchedule(CurrentTaskIndex);
-        }
         
         public async Awaitable CancelSchedule()
         {
