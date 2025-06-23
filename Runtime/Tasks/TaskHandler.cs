@@ -42,6 +42,7 @@ namespace JohaToolkit.UnityEngine.Tasks
                 await _currentSchedule.CancelSchedule();
             logger?.LogInfo($"Canceling Complete! ({_currentSchedule?.ScheduleName})");
             _currentSchedule = null;
+            await Awaitable.MainThreadAsync();
         }
 
         public virtual void ContinueBaseTaskSchedule()
