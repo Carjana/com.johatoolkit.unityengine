@@ -9,6 +9,8 @@ namespace JohaToolkit.UnityEngine.Tasks
     public class TaskSchedule
     {
         [SerializeField] private JoHaLogger logger;
+        [SerializeField] private string scheduleName;
+        public string ScheduleName => scheduleName;
         [SerializeReference] private TaskBase[] tasks;
         public TaskBase[] Tasks => tasks;
         [SerializeField] private bool loop;
@@ -33,7 +35,19 @@ namespace JohaToolkit.UnityEngine.Tasks
 
             return true;
         }
-        
+
+        public TaskSchedule SetTasks(TaskBase[] newTasks)
+        {
+            tasks = newTasks;
+            return this;
+        }
+
+        public TaskSchedule SetLooping(bool shouldLoop)
+        {
+            loop = shouldLoop;
+            return this;
+        }
+
         public async Awaitable ExecuteSchedule(int startIndex)
         {
             IsExecutingTasks = true;
