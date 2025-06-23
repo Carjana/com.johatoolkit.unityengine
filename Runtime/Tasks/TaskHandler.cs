@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Threading;
 using JohaToolkit.UnityEngine.ScriptableObjects.Logging;
 using UnityEngine;
 
@@ -9,132 +7,56 @@ namespace JohaToolkit.UnityEngine.Tasks
     [Serializable]
     public class TaskHandler
     {
-        [SerializeField] protected JoHaLogger logger; 
-        [SerializeReference] protected TaskBase[] taskSchedule;
-        public TaskBase[] TaskSchedule => taskSchedule;
-        [SerializeField] protected bool loop;
-        public bool IsLooping => loop;
-        public int CurrentTaskIndex { get; private set; }
-        public bool IsExecutingTasks { get; private set; }
-        public bool IsOverridingSchedule { get; private set; }
+        [SerializeField] protected JoHaLogger logger;
         
-        public event Action<TaskBase, bool> TaskStarted;
-        public event Action<TaskBase, bool> TaskCompleted;
-        public event Action<TaskBase> TaskCancelled;
-        
-        protected AwaitableCompletionSource CurrentTaskCompleted;
-        
-        protected CancellationTokenSource Cts;
-        
-        public virtual bool ValidateTasks(BaseTaskAgent agent)
-        {
-            foreach (TaskBase taskBase in taskSchedule)
-            {
-                if (taskBase.Init(agent)) 
-                    continue;
-                logger.LogError($"Task validation failed: {taskBase}. Does the agent implement every required interface?");
-                return false;
-            }
+        [SerializeField] protected TaskSchedule baseSchedule;
 
-            return true;
+        public bool IsOverridingBaseSchedule { get; protected set; }
+        private TaskSchedule _currentSchedule;
+        private int _activeOverrideCount;
+        
+        public virtual bool InitBaseTaskSchedule(BaseTaskAgent agent) => baseSchedule.InitTaskSchedule(agent);
+
+        public virtual void StartExecuteBaseSchedule(int startIndex)
+        {
+            _ = ExecuteScheduleAsync(baseSchedule, startIndex);
+        }
+
+        protected async Awaitable ExecuteScheduleAsync(TaskSchedule taskSchedule, int startIndex)
+        {
+            _currentSchedule = taskSchedule;
+            await taskSchedule.ExecuteSchedule(startIndex);
+        }
+
+        public virtual async Awaitable CancelScheduleAsync()
+        {
+            await _currentSchedule.CancelSchedule();
+            _currentSchedule = null;
+        }
+
+        public virtual void ContinueBaseTaskSchedule()
+        {
+            baseSchedule.ContinueTaskSchedule();
         }
         
-        public virtual async Awaitable ExecuteTaskScheduleAsync(int startIndex)
+
+        public virtual async Awaitable OverrideTaskScheduleAsync(TaskSchedule newSchedule, bool continueBaseScheduleOnCompletion = false)
         {
-            if (startIndex < 0 || startIndex >= taskSchedule.Length || IsExecutingTasks)
+            IsOverridingBaseSchedule = true;
+            _activeOverrideCount++;
+            await CancelScheduleAsync();
+            
+            await ExecuteScheduleAsync(newSchedule, 0);
+            
+            _activeOverrideCount--;
+            if (_activeOverrideCount != 0)
                 return;
             
-            CurrentTaskIndex = startIndex-1;
-            do
+            IsOverridingBaseSchedule = false;
+            if (continueBaseScheduleOnCompletion)
             {
-                CurrentTaskIndex++;
-                if (CurrentTaskIndex >= taskSchedule.Length)
-                    CurrentTaskIndex = 0;
-
-                await ExecuteTaskAsync(taskSchedule[CurrentTaskIndex]);
-                if (Cts.IsCancellationRequested)
-                    break;
-            } while ((loop || CurrentTaskIndex < taskSchedule.Length - 1) && !IsOverridingSchedule);
-
-            logger.LogInfo("Task Schedule completed/cancelled");
-        }
-
-        private async Awaitable ExecuteTaskAsync(TaskBase task)
-        {
-            Cts?.Dispose();
-            Cts = new CancellationTokenSource();
-            CurrentTaskCompleted = new AwaitableCompletionSource();
-            
-            bool taskStarted = await task.StartTask();
-            TaskStarted?.Invoke(task, taskStarted);
-            IsExecutingTasks = taskStarted;
-            
-            if (!taskStarted)
-            {
-                logger.LogWarning($"Task {task} failed to start");
-                CurrentTaskCompleted?.SetResult();
-                return;
+                ContinueBaseTaskSchedule();
             }
-
-            try
-            {
-                bool taskCompleted = await task.IsComplete(Cts.Token);
-                TaskCompleted?.Invoke(task, taskCompleted);
-                if (!taskCompleted)
-                {
-                    logger.LogWarning($"Task {task} is not complete");
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                TaskCancelled?.Invoke(task);
-                logger.LogWarning($"Task {task} was cancelled");
-            }
-            finally
-            {
-                CurrentTaskCompleted.SetResult();
-                IsExecutingTasks = false;
-            }
-        }
-
-        public virtual async Awaitable CancelTaskAsync()
-        {
-            if (!IsExecutingTasks)
-                return;
-            logger.LogInfo("Cancelling current task...");
-            Cts?.Cancel();
-            await CurrentTaskCompleted.Awaitable;
-            logger.LogInfo("Current task cancelled");
-        }
-
-        public virtual void ContinueTaskSchedule()
-        {
-            if (IsExecutingTasks)
-                return;
-            logger.LogInfo($"Continuing task schedule (TaskIndex: {CurrentTaskIndex})...");
-            _ = ExecuteTaskScheduleAsync(CurrentTaskIndex);
-        }
-
-        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase task, bool continueScheduleOnCompletion = false) => await OverrideTaskScheduleAsync(new[]{task}, continueScheduleOnCompletion);
-
-        public virtual async Awaitable OverrideTaskScheduleAsync(TaskBase[] tasks, bool continueScheduleOnCompletion = false)
-        {
-            logger.LogInfo($"Overriding CurrentTask with {tasks.Length} Tasks...");
-            IsOverridingSchedule = true;
-            if (IsExecutingTasks)
-                await CancelTaskAsync();
-            foreach (TaskBase task in tasks)
-            {
-                await ExecuteTaskAsync(task);
-                if (!Cts.IsCancellationRequested)
-                    continue;
-                logger.LogInfo("Task schedule Override cancelled");
-                break;
-            }
-            IsOverridingSchedule = false;
-            logger.LogInfo("Task schedule Override completed");
-            if(!Cts.IsCancellationRequested && continueScheduleOnCompletion)
-                ContinueTaskSchedule();
         }
     }
 }

@@ -8,7 +8,7 @@ namespace JohaToolkit.UnityEngine.Tasks
 
         protected virtual void Awake()
         {
-            taskHandler.ValidateTasks(this);
+            taskHandler.InitBaseTaskSchedule(this);
         }
     }
 }
