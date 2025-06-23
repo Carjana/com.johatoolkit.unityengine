@@ -42,7 +42,6 @@ namespace JohaToolkit.UnityEngine.Tasks
                 await _currentSchedule.CancelSchedule();
             logger?.LogInfo($"Canceling Complete! ({_currentSchedule?.ScheduleName})");
             _currentSchedule = null;
-            await Awaitable.MainThreadAsync();
         }
 
         public virtual void ContinueBaseTaskSchedule()
@@ -58,7 +57,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             IsOverridingBaseSchedule = true;
             _activeOverrideCount++;
             await CancelScheduleAsync();
-            
+            await Awaitable.EndOfFrameAsync();
             await ExecuteScheduleAsync(newSchedule, 0);
             
             _activeOverrideCount--;
