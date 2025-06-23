@@ -38,10 +38,9 @@ namespace JohaToolkit.UnityEngine.Tasks
         public virtual async Awaitable CancelScheduleAsync()
         {
             logger?.LogInfo($"Canceling Task Schedule {_currentSchedule?.ScheduleName}...");
-            if(_currentSchedule != null)
+            if (_currentSchedule != null)
                 await _currentSchedule.CancelSchedule();
             logger?.LogInfo($"Canceling Complete! ({_currentSchedule?.ScheduleName})");
-            _currentSchedule = null;
         }
 
         public virtual void ContinueBaseTaskSchedule()
