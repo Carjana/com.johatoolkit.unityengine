@@ -9,7 +9,7 @@ namespace JohaToolkit.UnityEngine.Tasks
     public class TaskSchedule
     {
         [SerializeField] private JoHaLogger logger;
-        [SerializeField] private TaskBase[] tasks;
+        [SerializeReference] private TaskBase[] tasks;
         public TaskBase[] Tasks => tasks;
         [SerializeField] private bool loop;
         public bool IsLooping => loop;
