@@ -29,7 +29,7 @@ namespace JohaToolkit.UnityEngine.Tasks
                 if (taskBase.Init(agent))
                     continue;
                 
-                logger.LogError($"Task validation failed: {taskBase}. Does the agent implement every required interface?");
+                logger?.LogError($"Task validation failed: {taskBase}. Does the agent implement every required interface?");
                 return false;
             }
 
@@ -83,7 +83,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             {
                 if (await task.IsComplete(_cts.Token))
                 {
-                    logger.LogInfo($"Task {task.taskName} completed");
+                    logger?.LogInfo($"Task {task.taskName} completed");
                     return;
                 }
                 
@@ -93,7 +93,7 @@ namespace JohaToolkit.UnityEngine.Tasks
                 
             }
             
-            logger.LogError($"Task {task.taskName} failed/Canceled");
+            logger?.LogError($"Task {task.taskName} failed/Canceled");
         }
         
         public async Awaitable CancelSchedule()
