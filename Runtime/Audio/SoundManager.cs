@@ -12,7 +12,6 @@ namespace JohaToolkit.UnityEngine.Audio
         [SerializeField] private JoHaLogger logger;
         [SerializeField] private SoundEmitter emitterPrefab;
         private readonly List<SoundEmitter> _activeSoundEmitters = new();
-        private readonly List<SoundEmitter> _frequentSoundEmitters = new();
         private IObjectPool<SoundEmitter> _emitterPool;
 
         [Header("Pool Settings")]
@@ -56,8 +55,7 @@ namespace JohaToolkit.UnityEngine.Audio
             }
             catch
             {
-                if(logger)
-                    logger.LogWarning("Sound is already release");
+                logger?.LogWarning("Sound is already released");
             }
 
             return false;
@@ -81,14 +79,16 @@ namespace JohaToolkit.UnityEngine.Audio
             return _emitterPool.Get();
         }
 
-        public void Play(SoundData soundData, Vector3 position = default, Transform parent = null)
+        public SoundEmitter Play(SoundData soundData, Vector3 position = default, Transform parent = null)
         {
-            Get().Play(soundData, position, parent ?? transform);
+            SoundEmitter emitter = Get();
+            emitter.Play(soundData, position, parent ?? transform);
+            return emitter;
         }
 
-        public void Play(SoundDataAsset soundDataAsset, Vector3 position = default, Transform parent = null)
+        public SoundEmitter Play(SoundDataAsset soundDataAsset, Vector3 position = default, Transform parent = null)
         {
-            Play(soundDataAsset.GetSoundData(), position, parent ?? transform);
+            return Play(soundDataAsset.GetSoundData(), position, parent ?? transform);
         }
 
         private void OnDestroySoundEmitter(SoundEmitter obj)
