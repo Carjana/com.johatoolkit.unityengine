@@ -9,6 +9,8 @@ namespace JohaToolkit.UnityEngine.Audio
         private AudioSource _audioSource;
         
         private Coroutine _playingCoroutine;
+
+        private bool _isPaused;
         
         public SoundData Data { get; private set; }
         
@@ -33,6 +35,18 @@ namespace JohaToolkit.UnityEngine.Audio
             _playingCoroutine = StartCoroutine(WaitForSoundToStop());
         }
 
+        public void Pause()
+        {
+            _isPaused = true;
+            _audioSource.Pause();
+        }
+
+        public void UnPause()
+        {
+            _audioSource.UnPause();
+            _isPaused = false;
+        }
+        
         private void SetAudioData(SoundData soundData)
         {
             Data = soundData;
@@ -52,7 +66,7 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private IEnumerator WaitForSoundToStop()
         {
-            yield return new WaitWhile(() => _audioSource.isPlaying);
+            yield return new WaitWhile(() => _audioSource.isPlaying && !_isPaused && _audioSource.time >= _audioSource.clip.length);
             Stop();
         }
         
@@ -64,6 +78,7 @@ namespace JohaToolkit.UnityEngine.Audio
             }
             
             _playingCoroutine = null;
+            _isPaused = false;
             _audioSource.Stop();
             SoundManager.Instance.ReturnToPool(this);
         }
