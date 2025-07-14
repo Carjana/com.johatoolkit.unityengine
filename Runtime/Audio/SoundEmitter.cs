@@ -9,12 +9,11 @@ namespace JohaToolkit.UnityEngine.Audio
     public class SoundEmitter : MonoBehaviour
     {
         private AudioSource _audioSource;
-        
         private Coroutine _playingCoroutine;
 
-        private bool _isPaused;
-        
+        public bool IsPaused { get; private set; }
         public SoundData Data { get; private set; }
+        public float Time => _audioSource.time;
 
         private List<Action> _soundEmitterStoppedListeners = new();
         private event Action _soundEmitterStopped;
@@ -55,14 +54,14 @@ namespace JohaToolkit.UnityEngine.Audio
 
         public void Pause()
         {
-            _isPaused = true;
+            IsPaused = true;
             _audioSource.Pause();
         }
 
         public void UnPause()
         {
             _audioSource.UnPause();
-            _isPaused = false;
+            IsPaused = false;
         }
         
         private void SetAudioData(SoundData soundData)
@@ -84,7 +83,7 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private IEnumerator WaitForSoundToStop()
         {
-            yield return new WaitWhile(() => _audioSource.isPlaying || (_isPaused && _audioSource.time <= _audioSource.clip.length));
+            yield return new WaitWhile(() => _audioSource.loop || _audioSource.time <= _audioSource.clip.length);
             Stop();
         }
         
