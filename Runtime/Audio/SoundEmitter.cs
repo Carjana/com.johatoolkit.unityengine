@@ -96,7 +96,7 @@ namespace JohaToolkit.UnityEngine.Audio
             }
             
             _playingCoroutine = null;
-            _isPaused = false;
+            IsPaused = false;
             _audioSource.Stop();
             SoundManager.Instance.ReturnToPool(this);
         }
