@@ -84,7 +84,7 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private IEnumerator WaitForSoundToStop()
         {
-            yield return new WaitWhile(() => _audioSource.isPlaying || _isPaused);
+            yield return new WaitWhile(() => _audioSource.isPlaying || (_isPaused && _audioSource.time <= _audioSource.clip.length));
             Stop();
         }
         
