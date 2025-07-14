@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using JohaToolkit.UnityEngine.Extensions;
 using UnityEngine;
 
@@ -13,7 +15,23 @@ namespace JohaToolkit.UnityEngine.Audio
         private bool _isPaused;
         
         public SoundData Data { get; private set; }
-        
+
+        private List<Action> _soundEmitterStoppedListeners = new();
+        private event Action _soundEmitterStopped;
+        public event Action SoundEmitterStopped
+        {
+            add
+            {
+                _soundEmitterStopped += value;
+                _soundEmitterStoppedListeners.Add(value);
+            }
+            remove
+            {
+                _soundEmitterStopped -= value;
+                _soundEmitterStoppedListeners.Remove(value);
+            }
+        }
+
         public void Initialize()
         {
             _audioSource = this.GetOrAddComponent<AudioSource>();
@@ -66,12 +84,13 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private IEnumerator WaitForSoundToStop()
         {
-            yield return new WaitWhile(() => _audioSource.isPlaying && !_isPaused && _audioSource.time >= _audioSource.clip.length);
+            yield return new WaitWhile(() => _audioSource.isPlaying || _isPaused);
             Stop();
         }
         
         public void Stop()
         {
+            InvokeSoundEmitterStopped();
             if(_playingCoroutine != null)
             {
                 StopCoroutine(_playingCoroutine);
@@ -81,6 +100,15 @@ namespace JohaToolkit.UnityEngine.Audio
             _isPaused = false;
             _audioSource.Stop();
             SoundManager.Instance.ReturnToPool(this);
+        }
+
+        private void InvokeSoundEmitterStopped()
+        {
+            _soundEmitterStopped?.Invoke();
+            foreach (Action soundEmitterStoppedListener in _soundEmitterStoppedListeners)
+            {
+                SoundEmitterStopped -= soundEmitterStoppedListener;
+            }
         }
     }
 }
