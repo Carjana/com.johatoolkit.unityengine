@@ -11,6 +11,7 @@ namespace JohaToolkit.UnityEngine.Audio
     {
         public const float MinPitch = -3f;
         public const float MaxPitch = 3f;
+        public string tag;
         public AudioClip clip;
         public AudioMixerGroup output;
         public bool isFrequentSound;

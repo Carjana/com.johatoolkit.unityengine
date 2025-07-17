@@ -11,7 +11,8 @@ namespace JohaToolkit.UnityEngine.Audio
     {
         [SerializeField] private JoHaLogger logger;
         [SerializeField] private SoundEmitter emitterPrefab;
-        private readonly List<SoundEmitter> _activeSoundEmitters = new();
+        public List<SoundEmitter> ActiveSoundEmitters { get; } = new();
+
         private IObjectPool<SoundEmitter> _emitterPool;
 
         [Header("Pool Settings")]
@@ -45,12 +46,12 @@ namespace JohaToolkit.UnityEngine.Audio
             if (!soundData.isFrequentSound)
                 return true;
 
-            if (_activeSoundEmitters.Count(s => s.Data.isFrequentSound) < maxFrequentSounds)
+            if (ActiveSoundEmitters.Count(s => s.Data.isFrequentSound) < maxFrequentSounds)
                 return true;
             
             try
             {
-                _activeSoundEmitters.First(s => s.Data.isFrequentSound).Stop();
+                ActiveSoundEmitters.First(s => s.Data.isFrequentSound).Stop();
                 return true;
             }
             catch
@@ -68,9 +69,9 @@ namespace JohaToolkit.UnityEngine.Audio
 
         public void StopAll()
         {
-            foreach (SoundEmitter emitter in _activeSoundEmitters)
+            for (int i = ActiveSoundEmitters.Count - 1; i >= 0; i--)
             {
-                emitter.Stop();
+                ActiveSoundEmitters[i].Stop();
             }
         }
 
@@ -98,7 +99,7 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private void OnReleaseSoundEmitter(SoundEmitter obj)
         {
-            _activeSoundEmitters.Remove(obj);
+            ActiveSoundEmitters.Remove(obj);
             obj.transform.position = transform.position;
             obj.transform.SetParent(transform);
             obj.gameObject.SetActive(false);
@@ -106,7 +107,7 @@ namespace JohaToolkit.UnityEngine.Audio
 
         private void OnGetSoundEmitter(SoundEmitter obj)
         {
-            _activeSoundEmitters.Add(obj);
+            ActiveSoundEmitters.Add(obj);
             obj.gameObject.SetActive(true);
         }
 
