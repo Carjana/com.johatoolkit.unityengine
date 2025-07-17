@@ -104,9 +104,9 @@ namespace JohaToolkit.UnityEngine.Audio
         private void InvokeSoundEmitterStopped()
         {
             _soundEmitterStopped?.Invoke();
-            foreach (Action soundEmitterStoppedListener in _soundEmitterStoppedListeners)
+            for (int i = _soundEmitterStoppedListeners.Count - 1; i >= 0; i--)
             {
-                SoundEmitterStopped -= soundEmitterStoppedListener;
+                SoundEmitterStopped -= _soundEmitterStoppedListeners[i];
             }
         }
     }
