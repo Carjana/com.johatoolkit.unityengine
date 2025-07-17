@@ -19,6 +19,9 @@ namespace JohaToolkit.UnityEngine.Tasks
         public int CurrentTaskIndex { get; private set; }
         public bool IsExecutingTasks { get; private set; }
         
+        public event Action<TaskBase> TaskStarted;
+        public event Action<TaskBase, bool> TaskCompleted;
+        
         private CancellationTokenSource _cts;
         private AwaitableCompletionSource _currentTaskCompleted;
 
@@ -78,12 +81,13 @@ namespace JohaToolkit.UnityEngine.Tasks
 
             if (!taskStarted)
                 return;
-            
+            TaskStarted?.Invoke(task);
             try
             {
                 if (await task.IsComplete(_cts.Token))
                 {
                     logger?.LogInfo($"Task {task.taskName} completed");
+                    TaskCompleted?.Invoke(task, true);
                     return;
                 }
                 
@@ -92,7 +96,7 @@ namespace JohaToolkit.UnityEngine.Tasks
             {
                 
             }
-            
+            TaskCompleted?.Invoke(task, false);
             logger?.LogError($"Task {task.taskName} failed/Canceled");
         }
         

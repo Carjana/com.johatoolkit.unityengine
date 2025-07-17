@@ -10,9 +10,11 @@ namespace JohaToolkit.UnityEngine.Tasks
         [SerializeField] protected JoHaLogger logger;
         
         [SerializeField] protected TaskSchedule baseSchedule;
+        public TaskSchedule BaseTaskSchedule => baseSchedule;
 
         public bool IsOverridingBaseSchedule { get; protected set; }
         private TaskSchedule _currentSchedule;
+        public TaskSchedule CurrentTaskSchedule => _currentSchedule;
         private int _activeOverrideCount;
 
         public event Action<TaskSchedule> OnScheduleStarted;
