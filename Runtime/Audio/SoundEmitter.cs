@@ -76,7 +76,7 @@ namespace JohaToolkit.UnityEngine.Audio
             _audioSource.loop = soundData.loop;
             _audioSource.priority = soundData.priority;
             _audioSource.volume = soundData.volume;
-            _audioSource.pitch = soundData.pitch;
+            _audioSource.pitch = soundData.Pitch;
             _audioSource.panStereo = soundData.stereoPan;
             _audioSource.reverbZoneMix = soundData.reverbZoneMix;            
         }

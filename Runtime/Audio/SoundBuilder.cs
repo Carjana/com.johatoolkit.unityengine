@@ -1,3 +1,4 @@
+using JohaToolkit.UnityEngine.Extensions;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -22,15 +23,13 @@ namespace JohaToolkit.UnityEngine.Audio
 
         public SoundBuilder WithRandomPitch(float minPitch, float maxPitch)
         {
-            _soundData.pitch = Random.Range(minPitch, maxPitch);
-            _soundData.pitch = Mathf.Clamp(_soundData.pitch, SoundData.MinPitch, SoundData.MaxPitch);
+            _soundData.randomPitch = true;
+            _soundData.pitchRange = new Vector2(minPitch, maxPitch).ClampVectorValues(SoundData.MinPitch, SoundData.MaxPitch);
             return this;
         }
         
         public SoundData Build()
         {
-            if (_soundData.pitch == 0)
-                _soundData.pitch = Mathf.Epsilon;
             return _soundData;
         }
     }
