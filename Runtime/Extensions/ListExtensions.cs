@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JohaToolkit.UnityEngine.Extensions
 {
@@ -35,5 +36,7 @@ namespace JohaToolkit.UnityEngine.Extensions
             items[indexA] = items[indexB];
             items[indexB] = temp;
         }
+
+        public static T Random<T>(this IList<T> enumerable) => enumerable[Rand.Next(0, enumerable.Count)];
     }
 }
