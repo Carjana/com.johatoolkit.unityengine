@@ -23,7 +23,7 @@ namespace JohaToolkit.UnityEngine.Audio
         [Range(0,256)] public int priority = 128;
         [Range(0, 1)] public float volume = 1f;
         public bool randomPitch;
-        [MinMaxSlider(MinPitch, MaxPitch), ShowIf(nameof(randomPitch))] public Vector2 pitchRange = new(0, 0);
+        [MinMaxSlider(MinPitch, MaxPitch, true), ShowIf(nameof(randomPitch))] public Vector2 pitchRange = new(0, 0);
         [HideIf(nameof(randomPitch))]public float defaultPitch = 1;
         public float Pitch
         {
