@@ -20,6 +20,7 @@ namespace JohaToolkit.UnityEngine.AI.UtilityBasedAI
         
         public void Update(float deltaTime)
         {
+            Context.UpdateContext();
             UtilityAIAction<TContext> chosenUtilityAIAction = _actionChooserStrategy.ChooseAction(Actions, Context, CurrentUtilityAIAction);
             if (CurrentUtilityAIAction != chosenUtilityAIAction)
             {
@@ -85,7 +86,7 @@ namespace JohaToolkit.UnityEngine.AI.UtilityBasedAI
 
     public abstract class UtilityBasedContext
     {
-        
+        public abstract void UpdateContext();
     }
     
 }
