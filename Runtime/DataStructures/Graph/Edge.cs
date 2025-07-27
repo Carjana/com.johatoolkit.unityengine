@@ -1,5 +1,8 @@
-﻿namespace JohaToolkit.UnityEngine.DataStructures.Graph
+﻿using System;
+
+namespace JohaToolkit.UnityEngine.DataStructures.Graph
 {
+    [Obsolete]
     public class Edge
     {
         public float Weight;

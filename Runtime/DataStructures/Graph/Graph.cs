@@ -1,9 +1,11 @@
 ﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace JohaToolkit.UnityEngine.DataStructures.Graph
 {
+    [Obsolete]
     public class Graph
     {
         public List<Vertex> Vertices = new();
