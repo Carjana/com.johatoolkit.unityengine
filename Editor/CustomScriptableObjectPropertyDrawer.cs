@@ -20,6 +20,9 @@ namespace Packages.com.johatoolkit.unityengine.Editor
                 property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, GUIContent.none);
             }
 
+            if (!property.objectReferenceValue)
+                return;
+            
             // Draw foldout properties
             if (property.isExpanded)
             {
@@ -29,6 +32,10 @@ namespace Packages.com.johatoolkit.unityengine.Editor
                 // Draw object properties
                 if (!editor)
                     UnityEditor.Editor.CreateCachedEditor(property.objectReferenceValue, null, ref editor);
+                
+                if (!editor)
+                    return;
+                
                 editor.OnInspectorGUI();
      
                 // Set indent back to what it was
