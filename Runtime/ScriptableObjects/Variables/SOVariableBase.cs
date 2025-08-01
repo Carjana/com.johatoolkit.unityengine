@@ -1,4 +1,5 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
@@ -8,6 +9,12 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
         [SerializeField] protected T startValue;
         [SerializeField] protected T currentValue;
 
+        [Button]
+        private void UpdateValue()
+        {
+            Value = currentValue;
+        }
+        
         public event Action<T> OnValueChanged;
         public T Value
         {
