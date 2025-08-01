@@ -12,7 +12,7 @@ namespace JohaToolkit.UnityEngine.ScriptableObjects.Variables
         [Button]
         private void UpdateValue()
         {
-            Value = currentValue;
+            OnValueChanged?.Invoke(currentValue);
         }
         
         public event Action<T> OnValueChanged;
