@@ -48,6 +48,12 @@ namespace JohaToolkit.UnityEngine.SaveSystem
         public static async Task<bool> SaveAsync(string saveName)
         {
             saveName += SaveGameExtension;
+            
+            if(!Directory.Exists(SaveGameDirectory))
+            {
+                Directory.CreateDirectory(SaveGameDirectory);
+            }
+            
             string saveFilePath = Path.Combine(SaveGameDirectory, saveName);
             
             if(File.Exists(saveFilePath))
