@@ -6,7 +6,6 @@ namespace JohaToolkit.UnityEngine.SaveSystem
     public class SaveGame
     {
         public string SaveName { get; set; }
-        public string SaveFilePath { get; set; }
-        public Dictionary<string, object> SaveData { get; set; } = new();
+        public Dictionary<int, object> SaveData { get; set; } = new();
     }
 }

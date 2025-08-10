@@ -10,201 +10,251 @@ namespace JohaToolkit.UnityEngine.SaveSystem
 {
     public static class SaveGameManager
     {
-        public enum SaveGameFormat
+        public static SaveGame DefaultSaveGame { get; private set; }
+        private static SaveGame _currentSaveGame;
+
+        public static SaveGame CurrentSaveGame
         {
-            Binary,
-            Json
-        }
-        
-        public static string SaveGameExtension = ".save";
-        public static string SaveGameDirectory = Path.Combine(Application.persistentDataPath, "SaveGames");
-        public static SaveGameFormat Format = SaveGameFormat.Json;
-        
-        private static readonly List<ISaveGameUser> Users = new();
-        public static SaveGame CurrentSaveGame { get; private set; }
-        
-        public static event Action SaveStarted;
-        public static event Action<bool> SaveCompleted;
-        
-        public static event Action LoadStarted;
-        public static event Action<bool> LoadCompleted;
-        
-        public static void RegisterSaveGameUser(this ISaveGameUser user)
-        {
-            if (!Users.Contains(user))
-            {
-                Users.Add(user);
-            }
-        }
-        
-        public static void UnregisterSaveGameUser(this ISaveGameUser user)
-        {
-            if (Users.Contains(user))
-            {
-                Users.Remove(user);
-            }
+            get => _currentSaveGame ??= DefaultSaveGame;
+            private set => _currentSaveGame = value;
         }
 
-        public static async Task<bool> SaveAsync(string saveName)
+        public static string SaveDirectory { get; private set; } =
+            Path.Combine(Application.persistentDataPath, "SaveGames");
+
+        public static string SaveExtension { get; private set; } = ".saveGame";
+
+        private static bool _isInitialized = false;
+
+        public static event Action<SaveGame> SaveGameStarted;
+        public static event Action<SaveGame> SaveGameEnded;
+        public static event Action<string> LoadGameStarted;
+        public static event Action<SaveGame> LoadGameEnded;
+
+        public static ISaveGameSerializer<SaveGame> SaveGameSerializer { get; private set; } =
+            new JsonSaveGameSerializer<SaveGame>();
+
+        public static void Init(SaveGame defaultSaveGame)
         {
-            saveName += SaveGameExtension;
-            
-            if(!Directory.Exists(SaveGameDirectory))
+            if (_isInitialized)
             {
-                Directory.CreateDirectory(SaveGameDirectory);
+                Debug.LogWarning("SaveGameManager is already initialized.");
+                return;
             }
-            
-            string saveFilePath = Path.Combine(SaveGameDirectory, saveName);
-            
-            if(File.Exists(saveFilePath))
-            {
-                File.Delete(saveFilePath);
-            }
-            
-            SaveStarted?.Invoke();
 
-            bool result = await Task.Run(() =>
-            {
-                SaveGame saveGame = new()
-                {
-                    SaveName = Path.GetFileNameWithoutExtension(saveName),
-                    SaveFilePath = saveFilePath
-                };
-                if (CurrentSaveGame != null)
-                {
-                    saveGame.SaveData = CurrentSaveGame.SaveData;
-                }
-                
-                foreach (ISaveGameUser user in Users.Where(IsUserExisting))
-                {
-                    user.Save(saveGame);
-                }
-
-                bool saveGameSucceeded = Format switch
-                {
-                    SaveGameFormat.Binary => ObjectSerializer.SaveObject(saveGame, saveFilePath),
-                    SaveGameFormat.Json => ObjectSerializer.SaveJson(saveGame, saveFilePath),
-                    _ => false
-                };
-                
-                if (saveGameSucceeded)
-                {
-                    CurrentSaveGame = saveGame;
-                }
-                
-                return saveGameSucceeded;
-            });
-            
-            SaveCompleted?.Invoke(result);
-            
-            return result;
+            if (!CheckSaveDirectory())
+                return;
+            DefaultSaveGame = defaultSaveGame;
+            _isInitialized = true;
+            EnableMethods();
         }
 
-        public static async Task<bool> LoadAsync(string saveName)
+        private static bool CheckSaveDirectory()
         {
-            if (!IsSaveGameExisting(saveName))
-                return false;
-                
-            saveName += SaveGameExtension;
-            string saveFilePath = Path.Combine(SaveGameDirectory, saveName);
-            
-            LoadStarted?.Invoke();
-            
-            bool result = await Task.Run(() =>
-            {
-                if (!LoadSaveGameFromPath(saveFilePath, out SaveGame saveGame))
-                {
-                    return false;
-                }
-                
-                CurrentSaveGame = saveGame;
-                
-                foreach (ISaveGameUser user in Users.Where(IsUserExisting))
-                {
-                    user.Load(saveGame);
-                }
-                
+            if (Directory.Exists(SaveDirectory))
                 return true;
-            });
-            
-            LoadCompleted?.Invoke(result);
-            return result;
-        }
-
-        public static bool DeleteSaveGame(string saveName)
-        {
-            if (!IsSaveGameExisting(saveName))
-                return false;
-            
-            saveName += SaveGameExtension;
-            string saveFilePath = Path.Combine(SaveGameDirectory, saveName);
-            
             try
             {
-                File.Delete(saveFilePath);
+                Directory.CreateDirectory(SaveDirectory);
                 return true;
             }
             catch (Exception e)
             {
-                Debug.LogError($"Error deleting saveGame: {e.Message}");
+                Debug.LogError($"Failed to create save directory: {e.Message}");
                 return false;
             }
         }
 
-        public static SaveGame[] GetSaveGames()
+        public static void SetSaveDirectory(string directory)
         {
-            string[] saveGameFiles = Directory.GetFiles(SaveGameDirectory, $"*{SaveGameExtension}");
-            List<SaveGame> saveGames = new();
-            foreach (string saveGameFile in saveGameFiles)
+            if (_isInitialized)
             {
-                if(!LoadSaveGameFromPath(saveGameFile, out SaveGame saveGame))
-                    continue;
-                saveGames.Add(saveGame);
+                Debug.LogWarning(
+                    "SaveGameManager is already initialized. Changing the save directory will not take effect.");
+                return;
             }
-            return saveGames.ToArray();
+
+            if (string.IsNullOrEmpty(directory))
+            {
+                Debug.LogError("Save directory cannot be null or empty.");
+                return;
+            }
+
+            SaveDirectory = directory;
         }
 
-        private static bool LoadSaveGameFromPath(string path, out SaveGame saveGame)
+        public static void SetSaveExtension(string extension)
         {
-            SaveGame save = Format switch
+            if (_isInitialized)
             {
-                SaveGameFormat.Binary => (SaveGame)ObjectSerializer.LoadObject(path),
-                SaveGameFormat.Json => ObjectSerializer.LoadJson<SaveGame>(path),
-                _ => null
-            };
-            if (save == null)
+                Debug.LogWarning(
+                    "SaveGameManager is already initialized. Changing the save extension will not take effect.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(extension) || !extension.StartsWith("."))
             {
-                Debug.LogWarning($"Error reading saveGame {path} file might be corrupt");
-                saveGame = null;
+                Debug.LogError("Save extension must be a valid file extension starting with a dot.");
+                return;
+            }
+
+            SaveExtension = extension;
+        }
+
+        public static void SetSaveGameSerializer(ISaveGameSerializer<SaveGame> serializer)
+        {
+            if (_isInitialized)
+            {
+                Debug.LogWarning(
+                    "SaveGameManager is already initialized. Changing the serializer will not take effect.");
+                return;
+            }
+
+            if (serializer == null)
+            {
+                Debug.LogError("Serializer cannot be null.");
+                return;
+            }
+
+            SaveGameSerializer = serializer;
+        }
+
+        private static void EnableMethods()
+        {
+            SaveGameAsync = ActualSaveGameAsync;
+            LoadGameAsync = ActualLoadGameAsync;
+            DeleteSaveGameAsync = ActualDeleteSaveGame;
+        }
+
+        public static Func<string, Task<bool>> SaveGameAsync = NotInitialized;
+        public static Func<string, Task<bool>> LoadGameAsync = NotInitialized;
+        public static Func<string, Task<bool>> DeleteSaveGameAsync = NotInitialized;
+
+        private static Task<bool> NotInitialized(string s) =>
+            throw new InvalidOperationException("SaveGameManager is not initialized. Call Init() before using it.");
+
+        private static Task<bool> ActualSaveGameAsync(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+            {
+                Debug.LogError("Save name cannot be null or empty.");
+                return Task.FromResult(false);
+            }
+
+
+            CurrentSaveGame.SaveName = saveName;
+
+            SaveGameStarted?.Invoke(CurrentSaveGame);
+
+            string savePath = GetSavePath(saveName);
+
+            if (File.Exists(savePath))
+                File.Delete(savePath);
+
+            bool result = SaveGameSerializer.Save(CurrentSaveGame, savePath);
+
+            SaveGameEnded?.Invoke(CurrentSaveGame);
+
+            return Task.FromResult(result);
+        }
+
+        private static Task<bool> ActualLoadGameAsync(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+            {
+                Debug.LogError("Save name cannot be null or empty.");
+                return Task.FromResult(false);
+            }
+
+            string savePath = GetSavePath(saveName);
+            if (!File.Exists(savePath))
+            {
+                Debug.LogError($"Save file not found: {savePath}");
+                return Task.FromResult(false);
+            }
+
+            LoadGameStarted?.Invoke(saveName);
+            bool result = SaveGameSerializer.Load(savePath, out SaveGame loadedSaveGame);
+            if (result)
+            {
+                CurrentSaveGame = loadedSaveGame;
+                CurrentSaveGame.SaveName = saveName;
+                LoadGameEnded?.Invoke(CurrentSaveGame);
+            }
+            else
+            {
+                Debug.LogError($"Failed to load save game from {savePath}");
+            }
+
+            LoadGameEnded?.Invoke(CurrentSaveGame);
+
+            return Task.FromResult(result);
+        }
+
+        private static Task<bool> ActualDeleteSaveGame(string saveName)
+        {
+            if (!DoesSaveGameExist(saveName))
+            {
+                Debug.LogError($"Save game {saveName} does not exist.");
+                return Task.FromResult(false);
+            }
+
+            if (saveName == CurrentSaveGame.SaveName)
+            {
+                ClearCurrentSaveGame();
+            }
+            
+            string savePath = GetSavePath(saveName);
+            try
+            {
+                File.Delete(savePath);
+                return Task.FromResult(true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to delete save game {saveName}: {e.Message}");
+                return Task.FromResult(false);
+            }
+        }
+
+        private static string GetSavePath(string saveName)
+        {
+            if (!string.IsNullOrEmpty(saveName))
+                return Path.Combine(SaveDirectory, saveName + SaveExtension);
+            Debug.LogError("Save name cannot be null or empty.");
+            return null;
+        }
+        
+        public static void ClearCurrentSaveGame()
+        {
+            LoadGameStarted?.Invoke(DefaultSaveGame.SaveName);
+            CurrentSaveGame = DefaultSaveGame;
+            LoadGameEnded?.Invoke(CurrentSaveGame);
+        }
+
+        public static List<string> GetAllSaveGames()
+        {
+            if (!Directory.Exists(SaveDirectory))
+            {
+                Debug.LogWarning("Save directory does not exist.");
+                return new List<string>();
+            }
+
+            return Directory.GetFiles(SaveDirectory, "*" + SaveExtension)
+                .Select(Path.GetFileNameWithoutExtension)
+                .ToList();
+        }
+
+        public static bool DoesSaveGameExist(string saveName)
+        {
+            if (string.IsNullOrEmpty(saveName))
+            {
+                Debug.LogError("Save name cannot be null or empty.");
                 return false;
             }
-            
-            saveGame = save;
-            return true;
-        }
-        
-        public static bool IsSaveGameExisting(string saveName)
-        {
-            saveName += SaveGameExtension;
-            string saveFilePath = Path.Combine(SaveGameDirectory, saveName);
-            bool exists = File.Exists(saveFilePath);
 
-            if (!exists)
-            {
-                Debug.LogWarning($"[SaveManager]: {saveName} does not exist");
-            }
-            
-            return exists;
-        }
-        
-        private static bool IsUserExisting(ISaveGameUser user)
-        {
-            if (user is not null) 
-                return true;
-            
-            Debug.LogWarning($"One SaveGameUser is null, did you unregister it?");
-            return false;
-
+            string savePath = GetSavePath(saveName);
+            return File.Exists(savePath);
         }
     }
 }
